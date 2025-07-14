@@ -37,7 +37,27 @@
 				"Release",
 				"-r",
 				"win-x64",
-				"--self-contained"
+				"--self-contained",
+				"-p:PublishSingleFile=true",
+				"--output",
+				"./publish"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "Publish Portable",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"publish",
+				"-c",
+				"Release",
+				"--output",
+				"./publish-portable"
 			],
 			"group": "build",
 			"problemMatcher": [

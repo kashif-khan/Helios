@@ -65,9 +65,32 @@ dotnet run
 
 ### Build Release Version
 
+#### Single-File Deployment (Recommended)
+
+Creates a single executable file with all dependencies included:
+
 ```bash
-dotnet publish -c Release -r win-x64 --self-contained
+dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true --output ./publish
 ```
+
+This reduces the deployment from **257 files** to just **7 files** (including the main executable).
+
+#### Portable Deployment
+
+Creates a smaller executable that requires .NET runtime to be installed:
+
+```bash
+dotnet publish -c Release --output ./publish-portable
+```
+
+This creates just **2 files** but requires the target system to have .NET 8.0 runtime installed.
+
+#### VS Code Tasks
+
+You can also use the configured VS Code tasks:
+
+- **Ctrl+Shift+P** → "Tasks: Run Task" → "Publish Release" (single-file)
+- **Ctrl+Shift+P** → "Tasks: Run Task" → "Publish Portable" (portable)
 
 ## Icon Generation
 

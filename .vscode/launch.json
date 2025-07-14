@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Helios",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Build Helios",
+            "program": "${workspaceFolder}/bin/Debug/net8.0-windows/Helios.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "requireExactSource": false
+        },
+        {
+            "name": "Launch Helios (Release)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Publish Release",
+            "program": "${workspaceFolder}/bin/Release/net8.0-windows/win-x64/Helios.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "requireExactSource": false
+        },
+        {
+            "name": "Attach to Helios",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}

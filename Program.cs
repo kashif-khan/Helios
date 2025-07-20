@@ -40,6 +40,9 @@ class Program
         Console.WriteLine("Right-click the tray icon for options.");
         Console.WriteLine("\nPress 'q' and Enter to quit, or minimize this window...");
         
+        // Hide the console window after initialization
+        HideConsole();
+        
         // Handle console input in a separate thread
         var inputThread = new Thread(HandleConsoleInput) { IsBackground = true };
         inputThread.Start();
@@ -77,7 +80,19 @@ class Program
         // Try to load the custom icon, fallback to system icon if not found
         try
         {
-            notifyIcon.Icon = new Icon("helios.ico");
+            // Get the path to the icon file relative to the application's directory
+            var applicationDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var iconPath = Path.Combine(applicationDirectory, "helios.ico");
+            
+            if (File.Exists(iconPath))
+            {
+                notifyIcon.Icon = new Icon(iconPath);
+            }
+            else
+            {
+                // Fallback to system icon if custom icon not found
+                notifyIcon.Icon = SystemIcons.Application;
+            }
         }
         catch
         {

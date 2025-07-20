@@ -6,10 +6,18 @@ class Program
 {
     private static NotifyIcon? notifyIcon;
     private static bool isExiting = false;
+    private static bool consoleAllocated = false;
 
     // P/Invoke declarations for kernel32.dll
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     private static extern uint SetThreadExecutionState(uint esFlags);
+
+    // Console allocation functions
+    [DllImport("kernel32.dll")]
+    private static extern bool AllocConsole();
+
+    [DllImport("kernel32.dll")]
+    private static extern bool FreeConsole();
 
     // Execution state flags
     private const uint ES_CONTINUOUS = 0x80000000;
@@ -19,29 +27,15 @@ class Program
     [STAThread]
     static void Main()
     {
-        Console.WriteLine("Helios - Screen Keep-Alive Application");
-        Console.WriteLine("======================================");
-        Console.WriteLine("Starting system tray application...");
-        
         // Initialize Windows Forms application for system tray
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         
         // Start keeping the screen active
         StartScreenKeepAlive();
-        Console.WriteLine("✓ Screen keep-alive activated");
         
         // Initialize system tray
         InitializeNotifyIcon();
-        Console.WriteLine("✓ System tray icon created");
-        
-        Console.WriteLine("\nHelios is now running in the background.");
-        Console.WriteLine("Look for the Helios icon in your system tray.");
-        Console.WriteLine("Right-click the tray icon for options.");
-        Console.WriteLine("\nPress 'q' and Enter to quit, or minimize this window...");
-        
-        // Hide the console window after initialization
-        HideConsole();
         
         // Handle console input in a separate thread
         var inputThread = new Thread(HandleConsoleInput) { IsBackground = true };
@@ -57,18 +51,27 @@ class Program
         {
             try
             {
-                var key = Console.ReadKey(true);
-                if (key.KeyChar == 'q' || key.KeyChar == 'Q')
+                // Only try to read input if console is allocated
+                if (consoleAllocated)
                 {
-                    Console.WriteLine("\nShutting down Helios...");
-                    ExitApplication();
-                    break;
+                    var key = Console.ReadKey(true);
+                    if (key.KeyChar == 'q' || key.KeyChar == 'Q')
+                    {
+                        Console.WriteLine("\nShutting down Helios...");
+                        ExitApplication();
+                        break;
+                    }
+                }
+                else
+                {
+                    // If no console, just sleep and check periodically
+                    Thread.Sleep(1000);
                 }
             }
             catch (InvalidOperationException)
             {
                 // Console input is not available (e.g., running as a Windows service)
-                break;
+                Thread.Sleep(1000);
             }
         }
     }
@@ -127,6 +130,22 @@ class Program
 
     private static void ShowConsole()
     {
+        if (!consoleAllocated)
+        {
+            AllocConsole();
+            consoleAllocated = true;
+            
+            // Redirect console output
+            Console.WriteLine("Helios - Screen Keep-Alive Application");
+            Console.WriteLine("======================================");
+            Console.WriteLine("✓ Screen keep-alive activated");
+            Console.WriteLine("✓ System tray icon created");
+            Console.WriteLine("\nHelios is running in the background.");
+            Console.WriteLine("Look for the Helios icon in your system tray.");
+            Console.WriteLine("Right-click the tray icon for options.");
+            Console.WriteLine("\nPress 'q' and Enter to quit, or close this window...");
+        }
+        
         var handle = GetConsoleWindow();
         if (handle != IntPtr.Zero)
         {
@@ -149,7 +168,12 @@ class Program
         if (isExiting) return;
         
         isExiting = true;
-        Console.WriteLine("Stopping screen keep-alive...");
+        
+        if (consoleAllocated)
+        {
+            Console.WriteLine("Stopping screen keep-alive...");
+        }
+        
         StopScreenKeepAlive();
         
         if (notifyIcon != null)
@@ -158,7 +182,12 @@ class Program
             notifyIcon.Dispose();
         }
         
-        Console.WriteLine("Helios has been stopped.");
+        if (consoleAllocated)
+        {
+            Console.WriteLine("Helios has been stopped.");
+            FreeConsole();
+        }
+        
         Application.Exit();
         Environment.Exit(0);
     }
